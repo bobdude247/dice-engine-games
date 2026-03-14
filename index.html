@@ -24,6 +24,13 @@
         gap: 16px;
       }
 
+      .game-layout {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1.4fr 1fr;
+        align-items: start;
+      }
+
       .panel {
         background: #1f2937;
         border: 1px solid #374151;
@@ -37,6 +44,7 @@
           radial-gradient(circle at 80% 80%, #1a4f8c 0%, transparent 50%),
           #0e3a73;
         border: 2px solid #8b6b2f;
+        box-shadow: inset 0 0 0 2px rgba(255, 232, 170, 0.16);
       }
 
       .row {
@@ -63,9 +71,9 @@
 
       .dice {
         display: grid;
-        grid-template-columns: repeat(5, minmax(70px, 1fr));
+        grid-template-columns: repeat(5, minmax(56px, 1fr));
         gap: 10px;
-        min-height: 96px;
+        min-height: 88px;
         align-items: center;
       }
 
@@ -126,8 +134,61 @@
 
       .boards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 12px;
+      }
+
+      .scorecard-panel {
+        padding: 12px;
+      }
+
+      .scorecard-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .scorecard-head h4 {
+        margin: 0;
+      }
+
+      .score-total {
+        color: #f3d688;
+        font-weight: 700;
+      }
+
+      .score-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .score-tag {
+        border: 1px solid #42516a;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 12px;
+        background: #172538;
+      }
+
+      .score-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        font-size: 12px;
+        color: #cdd6e3;
+      }
+
+      .scorecards-sheet summary {
+        cursor: pointer;
+        font-weight: 700;
+        margin: -2px 0 10px;
+      }
+
+      .scorecards-sheet[open] summary {
+        margin-bottom: 12px;
       }
 
       table {
@@ -149,6 +210,29 @@
       .muted {
         color: #9ca3af;
       }
+
+      @media (max-width: 860px) {
+        body {
+          padding: 12px;
+        }
+
+        .game-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .dice {
+          grid-template-columns: repeat(5, minmax(48px, 1fr));
+          gap: 8px;
+        }
+
+        .die {
+          max-width: none;
+        }
+
+        .score-meta {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
     </style>
   </head>
   <body>
@@ -166,26 +250,28 @@
         <span id="status" class="status"></span>
       </div>
 
-      <div class="panel table">
-        <h3>Dice Table</h3>
-        <div id="dice" class="dice"></div>
-        <p class="muted">Click a die to hold/unhold between rolls.</p>
-      </div>
+      <div class="game-layout">
+        <div class="panel table">
+          <h3>Dice Table</h3>
+          <div id="dice" class="dice"></div>
+          <p class="muted">Click a die to hold/unhold between rolls.</p>
+        </div>
 
-      <div class="panel">
-        <h3>Choose Score Slot</h3>
-        <div id="categories" class="categories"></div>
-      </div>
-
-      <div class="panel">
-        <h3>Scorecards</h3>
-        <div id="boards" class="boards"></div>
+        <div class="panel">
+          <h3>Choose Score Slot</h3>
+          <div id="categories" class="categories"></div>
+        </div>
       </div>
 
       <div class="panel">
         <h3>Final Ranking</h3>
         <pre id="results" class="muted">Game not finished.</pre>
       </div>
+
+      <details class="panel scorecards-sheet">
+        <summary>Scorecards</summary>
+        <div id="boards" class="boards"></div>
+      </details>
     </div>
 
     <script type="module">
@@ -290,26 +376,29 @@
 
         game.players.forEach((player, playerIndex) => {
           const panel = document.createElement('div');
-          panel.className = 'panel';
+          panel.className = 'panel scorecard-panel';
 
           const totals = getScoreTotals(player.scorecard);
-
-          const rows = CATEGORIES.map(
-            (category) =>
-              `<tr><td>${title(category)}</td><td>${player.scorecard[category] ?? '-'}</td></tr>`,
-          ).join('');
+          const filled = CATEGORIES.filter((category) => player.scorecard[category] != null);
+          const tags = filled
+            .map((category) => `<span class="score-tag">${title(category)}: ${player.scorecard[category]}</span>`)
+            .join('');
+          const remaining = CATEGORIES.length - filled.length;
 
           panel.innerHTML = `
-            <h4>Player ${playerIndex + 1}${game.currentPlayer === playerIndex && game.status !== 'finished' ? ' ← turn' : ''}</h4>
-            <table>
-              <tbody>
-                ${rows}
-                <tr><th>Upper</th><th>${totals.upperSubtotal}</th></tr>
-                <tr><th>Bonus</th><th>${totals.upperBonus}</th></tr>
-                <tr><th>Lower</th><th>${totals.lowerTotal}</th></tr>
-                <tr><th>Total</th><th>${totals.total}</th></tr>
-              </tbody>
-            </table>
+            <div class="scorecard-head">
+              <h4>Player ${playerIndex + 1}${game.currentPlayer === playerIndex && game.status !== 'finished' ? ' ← turn' : ''}</h4>
+              <span class="score-total">Total ${totals.total}</span>
+            </div>
+            <div class="score-tags">
+              ${tags || '<span class="muted">No scored slots yet.</span>'}
+            </div>
+            <div class="score-meta">
+              <span>Open: ${remaining}</span>
+              <span>Upper: ${totals.upperSubtotal}</span>
+              <span>Bonus: ${totals.upperBonus}</span>
+              <span>Lower: ${totals.lowerTotal}</span>
+            </div>
           `;
 
           boardsEl.appendChild(panel);
