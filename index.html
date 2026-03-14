@@ -24,6 +24,11 @@
         gap: 16px;
       }
 
+      .app.compact {
+        max-width: 920px;
+        gap: 10px;
+      }
+
       .game-layout {
         display: grid;
         gap: 16px;
@@ -36,6 +41,16 @@
         border: 1px solid #374151;
         border-radius: 12px;
         padding: 16px;
+      }
+
+      .app.compact .panel {
+        padding: 10px;
+        border-radius: 10px;
+      }
+
+      h3,
+      h4 {
+        margin: 0 0 8px;
       }
 
       .table {
@@ -52,6 +67,10 @@
         flex-wrap: wrap;
         gap: 12px;
         align-items: center;
+      }
+
+      .app.compact .row {
+        gap: 8px;
       }
 
       button,
@@ -77,6 +96,12 @@
         align-items: center;
       }
 
+      .app.compact .dice {
+        grid-template-columns: repeat(5, minmax(48px, 1fr));
+        gap: 8px;
+        min-height: 74px;
+      }
+
       .die {
         min-height: 62px;
         max-width: 62px;
@@ -95,6 +120,13 @@
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(3, 1fr);
         padding: 6px;
+      }
+
+      .app.compact .die {
+        min-height: 52px;
+        max-width: 52px;
+        padding: 5px;
+        border-radius: 10px;
       }
 
       .die.held {
@@ -116,6 +148,11 @@
           0 0 0 1px rgba(120, 86, 16, 0.5);
       }
 
+      .app.compact .pip {
+        width: 8px;
+        height: 8px;
+      }
+
       .die-value {
         margin-top: 6px;
         font-size: 11px;
@@ -128,8 +165,44 @@
         gap: 8px;
       }
 
+      .app.compact .categories {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
       .category-btn {
         text-align: left;
+      }
+
+      .category-btn.filled {
+        border-color: #42607f;
+        background: #17263a;
+        color: #b8c5d9;
+      }
+
+      .slot-summary {
+        display: none;
+      }
+
+      .app.compact .slot-summary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+
+      .slot-summary span {
+        border: 1px solid #374151;
+        border-radius: 999px;
+        background: #13243a;
+        padding: 2px 8px;
+        color: #d8e4f3;
+      }
+
+      .app.compact .category-btn {
+        font-size: 12px;
+        padding: 6px 8px;
       }
 
       .boards {
@@ -187,6 +260,14 @@
         margin: -2px 0 10px;
       }
 
+      .app.compact .scorecards-sheet summary {
+        margin-bottom: 8px;
+      }
+
+      .app.compact .scorecards-sheet {
+        display: none;
+      }
+
       .scorecards-sheet[open] summary {
         margin-bottom: 12px;
       }
@@ -205,6 +286,18 @@
 
       .status {
         font-weight: 600;
+      }
+
+      .results-panel {
+        margin-top: -2px;
+      }
+
+      .app.compact .results-panel {
+        display: none;
+      }
+
+      .app.compact.show-results .results-panel {
+        display: block;
       }
 
       .muted {
@@ -231,6 +324,10 @@
 
         .score-meta {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .app.compact .categories {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -259,11 +356,12 @@
 
         <div class="panel">
           <h3>Choose Score Slot</h3>
+          <div id="slotSummary" class="slot-summary"></div>
           <div id="categories" class="categories"></div>
         </div>
       </div>
 
-      <div class="panel">
+      <div class="panel results-panel">
         <h3>Final Ranking</h3>
         <pre id="results" class="muted">Game not finished.</pre>
       </div>
@@ -293,8 +391,11 @@
       const statusEl = document.getElementById('status');
       const diceEl = document.getElementById('dice');
       const categoriesEl = document.getElementById('categories');
+      const slotSummaryEl = document.getElementById('slotSummary');
       const boardsEl = document.getElementById('boards');
       const resultsEl = document.getElementById('results');
+      const appEl = document.querySelector('.app');
+      const scorecardsSheetEl = document.querySelector('.scorecards-sheet');
 
       let game = createGame({ playerCount: Number(playerCountEl.value) });
 
@@ -305,6 +406,14 @@
       }
 
       function renderStatus() {
+        const isCompact = game.players.length === 1;
+        appEl.classList.toggle('compact', isCompact);
+        appEl.classList.toggle('show-results', game.status === 'finished');
+
+        if (isCompact && game.status !== 'finished') {
+          scorecardsSheetEl.open = false;
+        }
+
         if (game.status === 'finished') {
           statusEl.textContent = 'Game finished';
           rollBtn.disabled = true;
@@ -352,14 +461,37 @@
 
       function renderCategories() {
         categoriesEl.innerHTML = '';
-        const open = availableCategories(game.players[game.currentPlayer].scorecard);
+        const isCompact = game.players.length === 1;
+        const currentScorecard = game.players[game.currentPlayer].scorecard;
+        const open = availableCategories(currentScorecard);
+
+        if (isCompact) {
+          const totals = getScoreTotals(currentScorecard);
+          const remaining = CATEGORIES.length - (CATEGORIES.length - open.length);
+          slotSummaryEl.innerHTML = `
+            <span>Total: ${totals.total}</span>
+            <span>Open: ${remaining}</span>
+            <span>Upper: ${totals.upperSubtotal}</span>
+            <span>Lower: ${totals.lowerTotal}</span>
+          `;
+        } else {
+          slotSummaryEl.innerHTML = '';
+        }
 
         for (const category of CATEGORIES) {
           const btn = document.createElement('button');
           btn.className = 'category-btn';
 
+          const filledScore = currentScorecard[category];
           const scorePreview = scoreCategory(game.dice, category);
-          btn.textContent = `${title(category)}${open.includes(category) ? ` (score ${scorePreview})` : ' (filled)'}`;
+          if (open.includes(category)) {
+            btn.textContent = `${title(category)} (score ${scorePreview})`;
+          } else if (isCompact) {
+            btn.textContent = `${title(category)} — ${filledScore}`;
+            btn.classList.add('filled');
+          } else {
+            btn.textContent = `${title(category)} (filled)`;
+          }
           btn.disabled = game.status === 'finished' || !game.hasRolled || !open.includes(category);
 
           btn.addEventListener('click', () => {
