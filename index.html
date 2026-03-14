@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Five of a Kind</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #111827;
+        color: #e5e7eb;
+      }
+
+      .app {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        background: #1f2937;
+        border: 1px solid #374151;
+        border-radius: 12px;
+        padding: 16px;
+      }
+
+      .table {
+        background:
+          radial-gradient(circle at 20% 20%, #1f5fa8 0%, transparent 45%),
+          radial-gradient(circle at 80% 80%, #1a4f8c 0%, transparent 50%),
+          #0e3a73;
+        border: 2px solid #8b6b2f;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+
+      button,
+      select {
+        border: 1px solid #4b5563;
+        background: #111827;
+        color: #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .dice {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(70px, 1fr));
+        gap: 10px;
+        min-height: 96px;
+        align-items: center;
+      }
+
+      .die {
+        min-height: 62px;
+        max-width: 62px;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 12px;
+        border: 2px solid #0b2343;
+        background:
+          radial-gradient(circle at 25% 20%, #5ea2ea 0%, transparent 30%),
+          radial-gradient(circle at 80% 80%, #123f78 0%, transparent 45%),
+          #1e5ea8;
+        box-shadow:
+          inset 0 0 0 1px #397fc9,
+          0 4px 10px rgba(0, 0, 0, 0.35);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        padding: 6px;
+      }
+
+      .die.held {
+        border-color: #f2d16b;
+        box-shadow:
+          inset 0 0 0 1px #f2d16b,
+          0 0 0 2px rgba(242, 209, 107, 0.35),
+          0 4px 10px rgba(0, 0, 0, 0.35);
+      }
+
+      .pip {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        place-self: center;
+        background: radial-gradient(circle at 35% 35%, #ffe9a3 0%, #e4b93f 60%, #a27a1f 100%);
+        box-shadow:
+          inset 0 1px 1px rgba(255, 255, 255, 0.3),
+          0 0 0 1px rgba(120, 86, 16, 0.5);
+      }
+
+      .die-value {
+        margin-top: 6px;
+        font-size: 11px;
+        color: #d1d5db;
+      }
+
+      .categories {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+      }
+
+      .category-btn {
+        text-align: left;
+      }
+
+      .boards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      td,
+      th {
+        border-bottom: 1px solid #374151;
+        padding: 6px 4px;
+        text-align: left;
+      }
+
+      .status {
+        font-weight: 600;
+      }
+
+      .muted {
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="panel row">
+        <label for="playerCount">Players</label>
+        <select id="playerCount">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+        <button id="newGameBtn">New Game</button>
+        <button id="rollBtn">Roll</button>
+        <span id="status" class="status"></span>
+      </div>
+
+      <div class="panel table">
+        <h3>Dice Table</h3>
+        <div id="dice" class="dice"></div>
+        <p class="muted">Click a die to hold/unhold between rolls.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Choose Score Slot</h3>
+        <div id="categories" class="categories"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Scorecards</h3>
+        <div id="boards" class="boards"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Final Ranking</h3>
+        <pre id="results" class="muted">Game not finished.</pre>
+      </div>
+    </div>
+
+    <script type="module">
+      import {
+        CATEGORIES,
+        applyScore,
+        availableCategories,
+        createGame,
+        getLeaderboard,
+        getScoreTotals,
+        rollTurn,
+        scoreCategory,
+        toggleHeldDie,
+      } from './src/games/five-of-a-kind/rules.js';
+
+      const playerCountEl = document.getElementById('playerCount');
+      const newGameBtn = document.getElementById('newGameBtn');
+      const rollBtn = document.getElementById('rollBtn');
+      const statusEl = document.getElementById('status');
+      const diceEl = document.getElementById('dice');
+      const categoriesEl = document.getElementById('categories');
+      const boardsEl = document.getElementById('boards');
+      const resultsEl = document.getElementById('results');
+
+      let game = createGame({ playerCount: Number(playerCountEl.value) });
+
+      function title(category) {
+        return category
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, (c) => c.toUpperCase());
+      }
+
+      function renderStatus() {
+        if (game.status === 'finished') {
+          statusEl.textContent = 'Game finished';
+          rollBtn.disabled = true;
+          return;
+        }
+
+        statusEl.textContent = `Round ${game.round} · Player ${game.currentPlayer + 1} · Rolls left: ${game.rollsLeft}`;
+        rollBtn.disabled = game.rollsLeft <= 0;
+      }
+
+      function renderDice() {
+        diceEl.innerHTML = '';
+        const pipPositions = {
+          1: [4],
+          2: [0, 8],
+          3: [0, 4, 8],
+          4: [0, 2, 6, 8],
+          5: [0, 2, 4, 6, 8],
+          6: [0, 2, 3, 5, 6, 8],
+        };
+
+        for (let i = 0; i < game.dice.length; i += 1) {
+          const button = document.createElement('button');
+          button.className = `die${game.held[i] ? ' held' : ''}`;
+          button.title = `Die ${i + 1}: ${game.dice[i]}${game.held[i] ? ' (held)' : ''}`;
+          button.setAttribute('aria-label', button.title);
+          button.disabled = game.status === 'finished' || !game.hasRolled;
+
+          const positions = pipPositions[game.dice[i]];
+          for (let cell = 0; cell < 9; cell += 1) {
+            const slot = document.createElement('span');
+            if (positions.includes(cell)) {
+              slot.className = 'pip';
+            }
+            button.appendChild(slot);
+          }
+
+          button.addEventListener('click', () => {
+            toggleHeldDie(game, i);
+            render();
+          });
+          diceEl.appendChild(button);
+        }
+      }
+
+      function renderCategories() {
+        categoriesEl.innerHTML = '';
+        const open = availableCategories(game.players[game.currentPlayer].scorecard);
+
+        for (const category of CATEGORIES) {
+          const btn = document.createElement('button');
+          btn.className = 'category-btn';
+
+          const scorePreview = scoreCategory(game.dice, category);
+          btn.textContent = `${title(category)}${open.includes(category) ? ` (score ${scorePreview})` : ' (filled)'}`;
+          btn.disabled = game.status === 'finished' || !game.hasRolled || !open.includes(category);
+
+          btn.addEventListener('click', () => {
+            applyScore(game, category);
+            render();
+          });
+
+          categoriesEl.appendChild(btn);
+        }
+      }
+
+      function renderBoards() {
+        boardsEl.innerHTML = '';
+
+        game.players.forEach((player, playerIndex) => {
+          const panel = document.createElement('div');
+          panel.className = 'panel';
+
+          const totals = getScoreTotals(player.scorecard);
+
+          const rows = CATEGORIES.map(
+            (category) =>
+              `<tr><td>${title(category)}</td><td>${player.scorecard[category] ?? '-'}</td></tr>`,
+          ).join('');
+
+          panel.innerHTML = `
+            <h4>Player ${playerIndex + 1}${game.currentPlayer === playerIndex && game.status !== 'finished' ? ' ← turn' : ''}</h4>
+            <table>
+              <tbody>
+                ${rows}
+                <tr><th>Upper</th><th>${totals.upperSubtotal}</th></tr>
+                <tr><th>Bonus</th><th>${totals.upperBonus}</th></tr>
+                <tr><th>Lower</th><th>${totals.lowerTotal}</th></tr>
+                <tr><th>Total</th><th>${totals.total}</th></tr>
+              </tbody>
+            </table>
+          `;
+
+          boardsEl.appendChild(panel);
+        });
+      }
+
+      function renderResults() {
+        if (game.status !== 'finished') {
+          resultsEl.textContent = 'Game not finished.';
+          return;
+        }
+
+        const board = getLeaderboard(game)
+          .map((entry, index) => `${index + 1}. Player ${entry.playerIndex + 1} — ${entry.total}`)
+          .join('\n');
+
+        resultsEl.textContent = board;
+      }
+
+      function render() {
+        renderStatus();
+        renderDice();
+        renderCategories();
+        renderBoards();
+        renderResults();
+      }
+
+      newGameBtn.addEventListener('click', () => {
+        game = createGame({ playerCount: Number(playerCountEl.value) });
+        render();
+      });
+
+      rollBtn.addEventListener('click', () => {
+        if (game.status !== 'inProgress') return;
+        rollTurn(game);
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
