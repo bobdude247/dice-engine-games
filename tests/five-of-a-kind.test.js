@@ -31,7 +31,9 @@ test('scoreCategory computes upper and lower section values', () => {
   assert.equal(scoreCategory([6, 6, 6, 6, 2], 'fourOfAKind'), 26);
   assert.equal(scoreCategory([2, 2, 3, 3, 3], 'fullHouse'), 25);
   assert.equal(scoreCategory([1, 2, 3, 4, 6], 'smallStraight'), 30);
+  assert.equal(scoreCategory([1, 2, 3, 4, 5], 'largeStraight'), 40);
   assert.equal(scoreCategory([2, 3, 4, 5, 6], 'largeStraight'), 40);
+  assert.equal(scoreCategory([1, 2, 3, 4, 4], 'largeStraight'), 0);
   assert.equal(scoreCategory([5, 5, 5, 5, 5], 'fiveOfAKind'), 50);
   assert.equal(scoreCategory([1, 2, 3, 4, 5], 'chance'), 15);
 });
@@ -109,4 +111,17 @@ test('leaderboard and winners are derived from totals', () => {
   const winners = getWinners(game);
   assert.equal(winners.length, 1);
   assert.equal(winners[0].playerIndex, 1);
+});
+
+test('additional five-of-a-kinds award +100 bonus when fiveOfAKind already scored', () => {
+  const game = createGame({ playerCount: 1 });
+
+  game.players[0].scorecard.fiveOfAKind = 50;
+  game.dice = [6, 6, 6, 6, 6];
+  game.hasRolled = true;
+
+  applyScore(game, 'chance');
+
+  assert.equal(game.players[0].scorecard.fiveOfAKind, 150);
+  assert.equal(game.players[0].scorecard.chance, 30);
 });

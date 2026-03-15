@@ -87,11 +87,12 @@ function isSmallStraight(dice) {
 }
 
 function isLargeStraight(dice) {
-  const unique = [...new Set(dice)].sort((a, b) => a - b);
-  if (unique.length !== 5) return false;
+  const unique = new Set(dice);
+  if (unique.size !== 5) return false;
 
-  const key = unique.join('');
-  return key === '12345' || key === '23456';
+  const lowStraight = [1, 2, 3, 4, 5].every((value) => unique.has(value));
+  const highStraight = [2, 3, 4, 5, 6].every((value) => unique.has(value));
+  return lowStraight || highStraight;
 }
 
 export function scoreCategory(dice, category) {
@@ -229,6 +230,15 @@ export function applyScore(game, category) {
   const player = game.players[game.currentPlayer];
   if (player.scorecard[category] !== null) {
     throw new Error(`Category already scored: ${category}`);
+  }
+
+  const hasFiveKindBonus =
+    isFiveOfAKind(game.dice) &&
+    player.scorecard.fiveOfAKind !== null &&
+    player.scorecard.fiveOfAKind > 0;
+
+  if (hasFiveKindBonus) {
+    player.scorecard.fiveOfAKind += 100;
   }
 
   player.scorecard[category] = scoreCategory(game.dice, category);
