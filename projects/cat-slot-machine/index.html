@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cat Slot Machine</title>
+    <link rel="stylesheet" href="./src/ui/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>Cat Slot Machine</h1>
+      <p class="subtitle">Standalone prototype using full-body and face close-up cat symbols.</p>
+
+      <section class="panel">
+        <label>
+          Bet
+          <input id="bet" type="number" min="1" value="1" />
+        </label>
+        <button id="spinButton">Spin</button>
+        <button id="topOffButton" type="button">Top Off to 10,000</button>
+      </section>
+
+      <section id="reels" class="reels" aria-live="polite"></section>
+
+      <section class="panel">
+        <div id="result">Press Spin to play.</div>
+        <div id="bankroll">Bankroll: $10,000</div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
