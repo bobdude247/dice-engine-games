@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Five of a Kind</title>
+    <title>Dice Engine Games</title>
     <style>
       :root {
         color-scheme: dark;
@@ -12,564 +12,91 @@
 
       body {
         margin: 0;
-        padding: 24px;
-        background: #111827;
+        min-height: 100vh;
+        background: radial-gradient(circle at 20% 20%, #1f5fa8 0%, transparent 40%), #0f172a;
         color: #e5e7eb;
+        display: grid;
+        place-items: center;
+        padding: 24px;
       }
 
-      .app {
-        max-width: 1100px;
-        margin: 0 auto;
+      .hub {
+        width: min(860px, 100%);
         display: grid;
         gap: 16px;
-      }
-
-      .app.compact {
-        max-width: 920px;
-        gap: 10px;
-      }
-
-      .game-layout {
-        display: grid;
-        gap: 16px;
-        grid-template-columns: 1.4fr 1fr;
-        align-items: start;
       }
 
       .panel {
-        background: #1f2937;
-        border: 1px solid #374151;
-        border-radius: 12px;
-        padding: 16px;
-      }
-
-      .app.compact .panel {
-        padding: 10px;
-        border-radius: 10px;
-      }
-
-      h3,
-      h4 {
-        margin: 0 0 8px;
-      }
-
-      .table {
-        background:
-          radial-gradient(circle at 20% 20%, #1f5fa8 0%, transparent 45%),
-          radial-gradient(circle at 80% 80%, #1a4f8c 0%, transparent 50%),
-          #0e3a73;
-        border: 2px solid #8b6b2f;
-        box-shadow: inset 0 0 0 2px rgba(255, 232, 170, 0.16);
-      }
-
-      .row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
-      }
-
-      .app.compact .row {
-        gap: 8px;
-      }
-
-      button,
-      select {
-        border: 1px solid #4b5563;
         background: #111827;
-        color: #e5e7eb;
-        border-radius: 8px;
-        padding: 8px 12px;
-        cursor: pointer;
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 18px;
       }
 
-      button:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-
-      .dice {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(56px, 1fr));
-        gap: 10px;
-        min-height: 88px;
-        align-items: center;
-      }
-
-      .app.compact .dice {
-        grid-template-columns: repeat(5, minmax(48px, 1fr));
-        gap: 8px;
-        min-height: 74px;
-      }
-
-      .die {
-        min-height: 62px;
-        max-width: 62px;
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 12px;
-        border: 2px solid #0b2343;
-        background:
-          radial-gradient(circle at 25% 20%, #5ea2ea 0%, transparent 30%),
-          radial-gradient(circle at 80% 80%, #123f78 0%, transparent 45%),
-          #1e5ea8;
-        box-shadow:
-          inset 0 0 0 1px #397fc9,
-          0 4px 10px rgba(0, 0, 0, 0.35);
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(3, 1fr);
-        padding: 6px;
-      }
-
-      .app.compact .die {
-        min-height: 52px;
-        max-width: 52px;
-        padding: 5px;
-        border-radius: 10px;
-      }
-
-      .die.held {
-        border-color: #f2d16b;
-        box-shadow:
-          inset 0 0 0 1px #f2d16b,
-          0 0 0 2px rgba(242, 209, 107, 0.35),
-          0 4px 10px rgba(0, 0, 0, 0.35);
-      }
-
-      .pip {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        place-self: center;
-        background: radial-gradient(circle at 35% 35%, #ffe9a3 0%, #e4b93f 60%, #a27a1f 100%);
-        box-shadow:
-          inset 0 1px 1px rgba(255, 255, 255, 0.3),
-          0 0 0 1px rgba(120, 86, 16, 0.5);
-      }
-
-      .app.compact .pip {
-        width: 8px;
-        height: 8px;
-      }
-
-      .die-value {
-        margin-top: 6px;
-        font-size: 11px;
-        color: #d1d5db;
-      }
-
-      .categories {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 8px;
-      }
-
-      .app.compact .categories {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
-      }
-
-      .category-btn {
-        text-align: left;
-      }
-
-      .category-btn.filled {
-        border-color: #42607f;
-        background: #17263a;
-        color: #b8c5d9;
-      }
-
-      .slot-summary {
-        display: none;
-      }
-
-      .app.compact .slot-summary {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
-        margin-bottom: 8px;
-        font-size: 12px;
-      }
-
-      .slot-summary span {
-        border: 1px solid #374151;
-        border-radius: 999px;
-        background: #13243a;
-        padding: 2px 8px;
-        color: #d8e4f3;
-      }
-
-      .app.compact .category-btn {
-        font-size: 12px;
-        padding: 6px 8px;
-      }
-
-      .boards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-      }
-
-      .scorecard-panel {
-        padding: 12px;
-      }
-
-      .scorecard-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-
-      .scorecard-head h4 {
+      h1,
+      h2,
+      p {
         margin: 0;
       }
 
-      .score-total {
-        color: #f3d688;
-        font-weight: 700;
+      .subtitle {
+        margin-top: 8px;
+        color: #cbd5e1;
       }
 
-      .score-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 10px;
-      }
-
-      .score-tag {
-        border: 1px solid #42516a;
-        border-radius: 999px;
-        padding: 3px 8px;
-        font-size: 12px;
-        background: #172538;
-      }
-
-      .score-meta {
+      .games {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 6px;
-        font-size: 12px;
-        color: #cdd6e3;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       }
 
-      .scorecards-sheet summary {
-        cursor: pointer;
-        font-weight: 700;
-        margin: -2px 0 10px;
+      .game-card {
+        display: grid;
+        gap: 10px;
+        align-content: start;
       }
 
-      .app.compact .scorecards-sheet summary {
-        margin-bottom: 8px;
+      .game-card p {
+        color: #cbd5e1;
       }
 
-      .app.compact .scorecards-sheet {
-        display: none;
-      }
-
-      .scorecards-sheet[open] summary {
-        margin-bottom: 12px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      td,
-      th {
-        border-bottom: 1px solid #374151;
-        padding: 6px 4px;
-        text-align: left;
-      }
-
-      .status {
+      .game-link {
+        display: inline-block;
+        width: fit-content;
+        text-decoration: none;
+        border: 1px solid #3b82f6;
+        color: #dbeafe;
+        background: #1d4ed8;
+        padding: 8px 12px;
+        border-radius: 8px;
         font-weight: 600;
       }
 
-      .results-panel {
-        margin-top: -2px;
-      }
-
-      .app.compact .results-panel {
-        display: none;
-      }
-
-      .app.compact.show-results .results-panel {
-        display: block;
-      }
-
-      .muted {
-        color: #9ca3af;
-      }
-
-      @media (max-width: 860px) {
-        body {
-          padding: 12px;
-        }
-
-        .game-layout {
-          grid-template-columns: 1fr;
-        }
-
-        .dice {
-          grid-template-columns: repeat(5, minmax(48px, 1fr));
-          gap: 8px;
-        }
-
-        .die {
-          max-width: none;
-        }
-
-        .score-meta {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .app.compact .categories {
-          grid-template-columns: 1fr;
-        }
+      .game-link:hover {
+        background: #2563eb;
       }
     </style>
   </head>
   <body>
-    <div class="app">
-      <div class="panel row">
-        <label for="playerCount">Players</label>
-        <select id="playerCount">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
-        <button id="newGameBtn">New Game</button>
-        <button id="rollBtn">Roll</button>
-        <span id="status" class="status"></span>
-      </div>
+    <main class="hub">
+      <section class="panel">
+        <h1>Dice Engine Games</h1>
+        <p class="subtitle">Choose a game. Each one has its own direct GitHub Pages URL and can also be launched from here.</p>
+      </section>
 
-      <div class="game-layout">
-        <div class="panel table">
-          <h3>Dice Table</h3>
-          <div id="dice" class="dice"></div>
-          <p class="muted">Click a die to hold/unhold between rolls.</p>
-        </div>
+      <section class="panel games" aria-label="Game selector">
+        <article class="panel game-card">
+          <h2>Five of a Kind</h2>
+          <p>Roll up to three times per turn, hold dice, and score categories.</p>
+          <a class="game-link" href="./five-of-a-kind.html">Open Five of a Kind</a>
+        </article>
 
-        <div class="panel">
-          <h3>Choose Score Slot</h3>
-          <div id="slotSummary" class="slot-summary"></div>
-          <div id="categories" class="categories"></div>
-        </div>
-      </div>
-
-      <div class="panel results-panel">
-        <h3>Final Ranking</h3>
-        <pre id="results" class="muted">Game not finished.</pre>
-      </div>
-
-      <details class="panel scorecards-sheet">
-        <summary>Scorecards</summary>
-        <div id="boards" class="boards"></div>
-      </details>
-    </div>
-
-    <script type="module">
-      import {
-        CATEGORIES,
-        applyScore,
-        availableCategories,
-        createGame,
-        getLeaderboard,
-        getScoreTotals,
-        rollTurn,
-        scoreCategory,
-        toggleHeldDie,
-      } from './src/games/five-of-a-kind/rules.js';
-
-      const playerCountEl = document.getElementById('playerCount');
-      const newGameBtn = document.getElementById('newGameBtn');
-      const rollBtn = document.getElementById('rollBtn');
-      const statusEl = document.getElementById('status');
-      const diceEl = document.getElementById('dice');
-      const categoriesEl = document.getElementById('categories');
-      const slotSummaryEl = document.getElementById('slotSummary');
-      const boardsEl = document.getElementById('boards');
-      const resultsEl = document.getElementById('results');
-      const appEl = document.querySelector('.app');
-      const scorecardsSheetEl = document.querySelector('.scorecards-sheet');
-
-      let game = createGame({ playerCount: Number(playerCountEl.value) });
-
-      function title(category) {
-        return category
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, (c) => c.toUpperCase());
-      }
-
-      function renderStatus() {
-        const isCompact = game.players.length === 1;
-        appEl.classList.toggle('compact', isCompact);
-        appEl.classList.toggle('show-results', game.status === 'finished');
-
-        if (isCompact && game.status !== 'finished') {
-          scorecardsSheetEl.open = false;
-        }
-
-        if (game.status === 'finished') {
-          statusEl.textContent = 'Game finished';
-          rollBtn.disabled = true;
-          return;
-        }
-
-        statusEl.textContent = `Round ${game.round} · Player ${game.currentPlayer + 1} · Rolls left: ${game.rollsLeft}`;
-        rollBtn.disabled = game.rollsLeft <= 0;
-      }
-
-      function renderDice() {
-        diceEl.innerHTML = '';
-        const pipPositions = {
-          1: [4],
-          2: [0, 8],
-          3: [0, 4, 8],
-          4: [0, 2, 6, 8],
-          5: [0, 2, 4, 6, 8],
-          6: [0, 2, 3, 5, 6, 8],
-        };
-
-        for (let i = 0; i < game.dice.length; i += 1) {
-          const button = document.createElement('button');
-          button.className = `die${game.held[i] ? ' held' : ''}`;
-          button.title = `Die ${i + 1}: ${game.dice[i]}${game.held[i] ? ' (held)' : ''}`;
-          button.setAttribute('aria-label', button.title);
-          button.disabled = game.status === 'finished' || !game.hasRolled;
-
-          const positions = pipPositions[game.dice[i]];
-          for (let cell = 0; cell < 9; cell += 1) {
-            const slot = document.createElement('span');
-            if (positions.includes(cell)) {
-              slot.className = 'pip';
-            }
-            button.appendChild(slot);
-          }
-
-          button.addEventListener('click', () => {
-            toggleHeldDie(game, i);
-            render();
-          });
-          diceEl.appendChild(button);
-        }
-      }
-
-      function renderCategories() {
-        categoriesEl.innerHTML = '';
-        const isCompact = game.players.length === 1;
-        const currentScorecard = game.players[game.currentPlayer].scorecard;
-        const open = availableCategories(currentScorecard);
-
-        if (isCompact) {
-          const totals = getScoreTotals(currentScorecard);
-          const remaining = CATEGORIES.length - (CATEGORIES.length - open.length);
-          slotSummaryEl.innerHTML = `
-            <span>Total: ${totals.total}</span>
-            <span>Open: ${remaining}</span>
-            <span>Upper: ${totals.upperSubtotal}</span>
-            <span>Lower: ${totals.lowerTotal}</span>
-          `;
-        } else {
-          slotSummaryEl.innerHTML = '';
-        }
-
-        for (const category of CATEGORIES) {
-          const btn = document.createElement('button');
-          btn.className = 'category-btn';
-
-          const filledScore = currentScorecard[category];
-          const scorePreview = scoreCategory(game.dice, category);
-          if (open.includes(category)) {
-            btn.textContent = `${title(category)} (score ${scorePreview})`;
-          } else if (isCompact) {
-            btn.textContent = `${title(category)} — ${filledScore}`;
-            btn.classList.add('filled');
-          } else {
-            btn.textContent = `${title(category)} (filled)`;
-          }
-          btn.disabled = game.status === 'finished' || !game.hasRolled || !open.includes(category);
-
-          btn.addEventListener('click', () => {
-            applyScore(game, category);
-            render();
-          });
-
-          categoriesEl.appendChild(btn);
-        }
-      }
-
-      function renderBoards() {
-        boardsEl.innerHTML = '';
-
-        game.players.forEach((player, playerIndex) => {
-          const panel = document.createElement('div');
-          panel.className = 'panel scorecard-panel';
-
-          const totals = getScoreTotals(player.scorecard);
-          const filled = CATEGORIES.filter((category) => player.scorecard[category] != null);
-          const tags = filled
-            .map((category) => `<span class="score-tag">${title(category)}: ${player.scorecard[category]}</span>`)
-            .join('');
-          const remaining = CATEGORIES.length - filled.length;
-
-          panel.innerHTML = `
-            <div class="scorecard-head">
-              <h4>Player ${playerIndex + 1}${game.currentPlayer === playerIndex && game.status !== 'finished' ? ' ← turn' : ''}</h4>
-              <span class="score-total">Total ${totals.total}</span>
-            </div>
-            <div class="score-tags">
-              ${tags || '<span class="muted">No scored slots yet.</span>'}
-            </div>
-            <div class="score-meta">
-              <span>Open: ${remaining}</span>
-              <span>Upper: ${totals.upperSubtotal}</span>
-              <span>Bonus: ${totals.upperBonus}</span>
-              <span>Lower: ${totals.lowerTotal}</span>
-            </div>
-          `;
-
-          boardsEl.appendChild(panel);
-        });
-      }
-
-      function renderResults() {
-        if (game.status !== 'finished') {
-          resultsEl.textContent = 'Game not finished.';
-          return;
-        }
-
-        const board = getLeaderboard(game)
-          .map((entry, index) => `${index + 1}. Player ${entry.playerIndex + 1} — ${entry.total}`)
-          .join('\n');
-
-        resultsEl.textContent = board;
-      }
-
-      function render() {
-        renderStatus();
-        renderDice();
-        renderCategories();
-        renderBoards();
-        renderResults();
-      }
-
-      newGameBtn.addEventListener('click', () => {
-        game = createGame({ playerCount: Number(playerCountEl.value) });
-        render();
-      });
-
-      rollBtn.addEventListener('click', () => {
-        if (game.status !== 'inProgress') return;
-        rollTurn(game);
-        render();
-      });
-
-      render();
-    </script>
+        <article class="panel game-card">
+          <h2>Shut the Box</h2>
+          <p>Roll and close tiles that sum to your roll total before you run out of options.</p>
+          <a class="game-link" href="./projects/shut-the-box/">Open Shut the Box</a>
+        </article>
+      </section>
+    </main>
   </body>
 </html>

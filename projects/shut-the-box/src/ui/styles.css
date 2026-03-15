@@ -52,6 +52,26 @@ body {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
 }
 
+nav.panel {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: #145236;
+  color: var(--text);
+  text-decoration: none;
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+.nav-link:hover {
+  background: var(--btn-hover);
+}
+
 .casino-table {
   background: linear-gradient(180deg, var(--felt) 0%, var(--felt-deep) 100%);
 }
