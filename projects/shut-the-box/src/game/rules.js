@@ -1,10 +1,18 @@
 import { rollDie } from './roll.js';
 
 export const DEFAULT_TILE_COUNT = 9;
+export const MIN_PLAYERS = 1;
+export const MAX_PLAYERS = 4;
 
 function assertPositiveInt(value, name) {
   if (!Number.isInteger(value) || value < 1) {
     throw new Error(`${name} must be a positive integer.`);
+  }
+}
+
+function assertPlayerCount(value) {
+  if (!Number.isInteger(value) || value < MIN_PLAYERS || value > MAX_PLAYERS) {
+    throw new Error(`playerCount must be an integer between ${MIN_PLAYERS} and ${MAX_PLAYERS}.`);
   }
 }
 
@@ -203,3 +211,91 @@ export function getRuleHint(game) {
     : 'Two-dice mode.';
 }
 
+export function createMatch({ playerCount = 1, tileCount = DEFAULT_TILE_COUNT, rng = Math.random } = {}) {
+  assertPlayerCount(playerCount);
+  assertPositiveInt(tileCount, 'tileCount');
+
+  return {
+    playerCount,
+    tileCount,
+    rng,
+    currentPlayerIndex: 0,
+    players: Array.from({ length: playerCount }, () => createGame({ tileCount, rng })),
+    status: 'inProgress',
+    winnerIndexes: [],
+  };
+}
+
+export function getCurrentPlayer(match) {
+  return match.players[match.currentPlayerIndex] ?? null;
+}
+
+function completeMatch(match) {
+  match.status = 'completed';
+  const scores = match.players.map((player) => getScore(player));
+  const bestScore = Math.min(...scores);
+  match.winnerIndexes = scores
+    .map((score, index) => (score === bestScore ? index : -1))
+    .filter((index) => index >= 0);
+}
+
+function advanceMatchIfPlayerFinished(match) {
+  if (match.status === 'completed') {
+    return match;
+  }
+
+  const player = getCurrentPlayer(match);
+  if (!player || (player.status !== 'won' && player.status !== 'lost')) {
+    return match;
+  }
+
+  if (match.currentPlayerIndex < match.playerCount - 1) {
+    match.currentPlayerIndex += 1;
+    return match;
+  }
+
+  completeMatch(match);
+  return match;
+}
+
+export function getMatchScoreboard(match) {
+  return match.players.map((player, index) => ({
+    playerIndex: index,
+    isCurrent: match.currentPlayerIndex === index && match.status !== 'completed',
+    status: player.status,
+    score: getScore(player),
+    turn: player.turn,
+  }));
+}
+
+export function rollForCurrentPlayer(match) {
+  if (match.status === 'completed') {
+    throw new Error('Match is complete. Start a new game to roll again.');
+  }
+
+  const player = getCurrentPlayer(match);
+  rollDice(player);
+  advanceMatchIfPlayerFinished(match);
+  return match;
+}
+
+export function toggleCurrentPlayerTile(match, tile) {
+  if (match.status === 'completed') {
+    return match;
+  }
+
+  const player = getCurrentPlayer(match);
+  toggleSelectedTile(player, tile);
+  return match;
+}
+
+export function playCurrentPlayerSelection(match, selection) {
+  if (match.status === 'completed') {
+    throw new Error('Match is complete. Start a new game to play again.');
+  }
+
+  const player = getCurrentPlayer(match);
+  playSelection(player, selection);
+  advanceMatchIfPlayerFinished(match);
+  return match;
+}

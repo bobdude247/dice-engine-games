@@ -2,14 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  MAX_PLAYERS,
+  MIN_PLAYERS,
   canUseSingleDie,
+  createMatch,
   createGame,
+  getCurrentPlayer,
   getDiceCount,
+  getMatchScoreboard,
   getScore,
   getValidMoves,
   isValidMove,
+  playCurrentPlayerSelection,
   playSelection,
+  rollForCurrentPlayer,
   rollDice,
+  toggleCurrentPlayerTile,
   toggleSelectedTile,
 } from '../src/game/rules.js';
 
@@ -108,4 +116,66 @@ test('invalid move throws', () => {
   rollDice(game); // total 5
 
   assert.throws(() => playSelection(game, [1, 2]), /Invalid move/);
+});
+
+test('createMatch supports 1..4 players and rejects out-of-range values', () => {
+  const solo = createMatch({ playerCount: MIN_PLAYERS });
+  const four = createMatch({ playerCount: MAX_PLAYERS });
+
+  assert.equal(solo.players.length, 1);
+  assert.equal(four.players.length, 4);
+  assert.throws(() => createMatch({ playerCount: 0 }), /playerCount/);
+  assert.throws(() => createMatch({ playerCount: 5 }), /playerCount/);
+});
+
+test('single-player match completes immediately when player loses', () => {
+  const match = createMatch({ playerCount: 1, rng: sequenceRng([0.99, 0.99]) });
+  const player = getCurrentPlayer(match);
+  player.openTiles = [1, 2, 4];
+
+  rollForCurrentPlayer(match);
+
+  assert.equal(player.status, 'lost');
+  assert.equal(match.status, 'completed');
+  assert.deepEqual(match.winnerIndexes, [0]);
+});
+
+test('multi-player match advances to next player when current player finishes', () => {
+  const match = createMatch({ playerCount: 2, rng: sequenceRng([0.99, 0.99]) });
+  const first = getCurrentPlayer(match);
+  first.openTiles = [1, 2, 4];
+
+  rollForCurrentPlayer(match);
+
+  assert.equal(first.status, 'lost');
+  assert.equal(match.status, 'inProgress');
+  assert.equal(match.currentPlayerIndex, 1);
+  assert.equal(getCurrentPlayer(match).status, 'awaitingRoll');
+});
+
+test('match scoreboard marks current and winner players', () => {
+  const match = createMatch({ playerCount: 2, rng: sequenceRng([0.0, 0.5, 0.99, 0.99]) });
+  const first = getCurrentPlayer(match);
+  first.openTiles = [1];
+
+  rollForCurrentPlayer(match); // single die => 1
+  toggleCurrentPlayerTile(match, 1);
+  playCurrentPlayerSelection(match);
+
+  assert.equal(first.status, 'won');
+  assert.equal(match.currentPlayerIndex, 1);
+
+  const second = getCurrentPlayer(match);
+  second.openTiles = [1, 2, 4];
+  rollForCurrentPlayer(match); // 6+6 = 12 -> no moves
+
+  assert.equal(match.status, 'completed');
+  assert.deepEqual(match.winnerIndexes, [0]);
+
+  const board = getMatchScoreboard(match);
+  assert.equal(board.length, 2);
+  assert.equal(board[0].score, 0);
+  assert.equal(board[1].score, 7);
+  assert.equal(board[0].isCurrent, false);
+  assert.equal(board[1].isCurrent, false);
 });

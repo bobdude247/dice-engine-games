@@ -15,10 +15,33 @@
         </p>
       </header>
 
+      <section class="panel setup-panel" aria-label="Game setup">
+        <h2>Game Setup</h2>
+        <div class="setup-controls">
+          <label for="player-count">Players</label>
+          <select id="player-count">
+            <option value="1" selected>1 Player</option>
+            <option value="2">2 Players</option>
+            <option value="3">3 Players</option>
+            <option value="4">4 Players</option>
+          </select>
+
+          <label for="tile-count">Tiles</label>
+          <select id="tile-count">
+            <option value="9" selected>9 Tiles (Classic)</option>
+            <option value="12">12 Tiles</option>
+          </select>
+
+          <button id="apply-setup-btn" type="button">Start / Reset Match</button>
+        </div>
+      </section>
+
       <section class="layout">
-        <section class="panel">
+        <section class="panel casino-table">
           <h2>Board</h2>
           <div id="tiles" class="tiles" aria-label="Tiles"></div>
+
+          <div id="dice-tray" class="dice-tray" aria-label="Rolled dice"></div>
 
           <div class="controls">
             <button id="roll-btn" type="button">Roll Dice</button>
@@ -27,6 +50,8 @@
           </div>
 
           <div class="status-grid" aria-live="polite">
+            <div><strong>Match:</strong> <span id="match-text"></span></div>
+            <div><strong>Current player:</strong> <span id="player-text"></span></div>
             <div><strong>Status:</strong> <span id="status-text"></span></div>
             <div><strong>Dice:</strong> <span id="dice-text"></span></div>
             <div><strong>Roll total:</strong> <span id="roll-text"></span></div>
@@ -37,6 +62,9 @@
         </section>
 
         <aside class="panel">
+          <h2>Players</h2>
+          <ul id="players-list" class="players-list"></ul>
+
           <h2>Valid Moves</h2>
           <p class="muted">Each move is a tile combination that sums to the current roll.</p>
           <ul id="moves-list" class="moves"></ul>
