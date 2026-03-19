@@ -30,7 +30,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          # Publish only the prepared static site root so URLs map correctly.
+          # Example: /EC2-scheduler/ -> _site/EC2-scheduler/index.html
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
