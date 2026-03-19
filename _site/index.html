@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dice Engine Games</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 20% 20%, #1f5fa8 0%, transparent 40%), #0f172a;
+        color: #e5e7eb;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .hub {
+        width: min(860px, 100%);
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        background: #111827;
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 18px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      .subtitle {
+        margin-top: 8px;
+        color: #cbd5e1;
+      }
+
+      .games {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .game-card {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+
+      .game-card p {
+        color: #cbd5e1;
+      }
+
+      .game-link {
+        display: inline-block;
+        width: fit-content;
+        text-decoration: none;
+        border: 1px solid #3b82f6;
+        color: #dbeafe;
+        background: #1d4ed8;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+
+      .game-link:hover {
+        background: #2563eb;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="hub">
+      <section class="panel">
+        <h1>Dice Engine Games</h1>
+        <p class="subtitle">Choose a game. Each one has its own direct GitHub Pages URL and can also be launched from here.</p>
+      </section>
+
+      <section class="panel games" aria-label="Game selector">
+        <article class="panel game-card">
+          <h2>Five of a Kind</h2>
+          <p>Roll up to three times per turn, hold dice, and score categories.</p>
+          <a class="game-link" href="./five-of-a-kind.html">Open Five of a Kind</a>
+        </article>
+
+        <article class="panel game-card">
+          <h2>Shut the Box</h2>
+          <p>Roll and close tiles that sum to your roll total before you run out of options.</p>
+          <a class="game-link" href="./projects/shut-the-box/">Open Shut the Box</a>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
