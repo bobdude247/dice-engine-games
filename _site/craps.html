@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Casino Craps (Single Player)</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 22px;
+        background:
+          radial-gradient(circle at 20% 10%, rgba(56, 189, 248, 0.2) 0%, transparent 35%),
+          radial-gradient(circle at 80% 90%, rgba(250, 204, 21, 0.12) 0%, transparent 45%),
+          #0a1222;
+        color: #e5e7eb;
+      }
+
+      .app {
+        max-width: 1050px;
+        margin: 0 auto;
+        display: grid;
+        gap: 14px;
+      }
+
+      .panel {
+        border: 1px solid #334155;
+        border-radius: 12px;
+        background: #111827;
+        padding: 14px;
+      }
+
+      .top-nav {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .nav-link {
+        display: inline-block;
+        text-decoration: none;
+        border: 1px solid #4b5563;
+        background: #0f172a;
+        color: #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+
+      .layout {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1.3fr 1fr;
+      }
+
+      .table {
+        background:
+          radial-gradient(circle at 20% 20%, #1f5fa8 0%, transparent 45%),
+          radial-gradient(circle at 75% 80%, #1a4f8c 0%, transparent 55%),
+          #0e3a73;
+        border: 2px solid #8b6b2f;
+        box-shadow: inset 0 0 0 2px rgba(255, 232, 170, 0.16);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .subtitle {
+        margin-top: 8px;
+        color: #cbd5e1;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .pill {
+        border: 1px solid #40516b;
+        background: #122134;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+
+      .bet-row,
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      button,
+      input {
+        border: 1px solid #4b5563;
+        background: #0f172a;
+        color: #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      input {
+        width: 120px;
+      }
+
+      .roll {
+        border-color: #3b82f6;
+        background: #1d4ed8;
+        color: #eff6ff;
+        font-weight: 700;
+      }
+
+      .dice {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 92px));
+        gap: 10px;
+      }
+
+      .die {
+        min-height: 92px;
+        border-radius: 12px;
+        border: 2px solid #0b2343;
+        background:
+          radial-gradient(circle at 25% 20%, #5ea2ea 0%, transparent 30%),
+          radial-gradient(circle at 80% 80%, #123f78 0%, transparent 45%),
+          #1e5ea8;
+        box-shadow:
+          inset 0 0 0 1px #397fc9,
+          0 4px 10px rgba(0, 0, 0, 0.35);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        padding: 8px;
+      }
+
+      .pip {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        place-self: center;
+        background: radial-gradient(circle at 35% 35%, #ffe9a3 0%, #e4b93f 60%, #a27a1f 100%);
+      }
+
+      .status {
+        margin-top: 10px;
+        font-weight: 700;
+      }
+
+      .muted {
+        color: #9ca3af;
+      }
+
+      .history {
+        margin: 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 4px;
+        font-size: 14px;
+      }
+
+      .session-over {
+        border-color: #7f1d1d;
+        background: #2a1014;
+      }
+
+      @media (max-width: 860px) {
+        body {
+          padding: 12px;
+        }
+
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <div class="panel top-nav" aria-label="Game navigation">
+        <a class="nav-link" href="./">Game Hub</a>
+        <a class="nav-link" href="./five-of-a-kind.html">Five of a Kind</a>
+        <a class="nav-link" href="./projects/shut-the-box/">Shut the Box</a>
+      </div>
+
+      <section class="panel table">
+        <h1>Casino Craps — Pass Line Session</h1>
+        <p class="subtitle">Single-player table flow: bet, roll come-out, play the point, build your bankroll.</p>
+      </section>
+
+      <div class="layout">
+        <section class="panel table" id="tablePanel">
+          <h2>Table</h2>
+          <div class="stats" id="summary"></div>
+
+          <div class="bet-row" style="margin-top: 12px">
+            <label for="betInput">Pass Line Bet</label>
+            <input id="betInput" type="number" min="5" step="1" value="10" />
+            <button data-bet="5" class="quick-bet">+5</button>
+            <button data-bet="10" class="quick-bet">+10</button>
+            <button data-bet="25" class="quick-bet">+25</button>
+            <button id="placeBetBtn">Place Bet</button>
+          </div>
+
+          <div class="action-row" style="margin-top: 10px">
+            <button id="rollBtn" class="roll">Roll Dice</button>
+            <button id="newSessionBtn">New Session</button>
+            <span id="limits" class="muted"></span>
+          </div>
+
+          <div class="dice" id="dice"></div>
+          <p id="status" class="status"></p>
+          <p id="lastRoll" class="muted"></p>
+        </section>
+
+        <section class="panel">
+          <h2>Round Log</h2>
+          <p class="muted" style="margin-top: 6px">Latest resolved rounds (win/loss) appear here.</p>
+          <ol id="history" class="history" style="margin-top: 10px"></ol>
+        </section>
+      </div>
+    </main>
+
+    <script type="module">
+      import { createGame, getTableLimits, placeBet, playRoll } from './src/games/craps/rules.js';
+
+      const summaryEl = document.getElementById('summary');
+      const betInputEl = document.getElementById('betInput');
+      const limitsEl = document.getElementById('limits');
+      const placeBetBtn = document.getElementById('placeBetBtn');
+      const rollBtn = document.getElementById('rollBtn');
+      const newSessionBtn = document.getElementById('newSessionBtn');
+      const statusEl = document.getElementById('status');
+      const lastRollEl = document.getElementById('lastRoll');
+      const diceEl = document.getElementById('dice');
+      const historyEl = document.getElementById('history');
+      const tablePanelEl = document.getElementById('tablePanel');
+
+      let game = createGame({ startingBankroll: 500, tableMin: 5, tableMax: 200 });
+
+      function makeDie(value) {
+        const pipPositions = {
+          1: [4],
+          2: [0, 8],
+          3: [0, 4, 8],
+          4: [0, 2, 6, 8],
+          5: [0, 2, 4, 6, 8],
+          6: [0, 2, 3, 5, 6, 8],
+        };
+
+        const die = document.createElement('div');
+        die.className = 'die';
+
+        for (let cell = 0; cell < 9; cell += 1) {
+          const slot = document.createElement('span');
+          if (pipPositions[value].includes(cell)) {
+            slot.className = 'pip';
+          }
+          die.appendChild(slot);
+        }
+
+        return die;
+      }
+
+      function winRate(stats) {
+        const resolved = stats.wins + stats.losses;
+        if (resolved === 0) return '0.0%';
+        return `${((stats.wins / resolved) * 100).toFixed(1)}%`;
+      }
+
+      function renderSummary() {
+        const limits = getTableLimits(game);
+
+        summaryEl.innerHTML = `
+          <span class="pill">Bankroll: <strong>$${game.bankroll}</strong></span>
+          <span class="pill">Phase: <strong>${game.phase === 'comeOut' ? 'Come-Out' : `Point ${game.point}`}</strong></span>
+          <span class="pill">Active Bet: <strong>$${game.activeBet}</strong></span>
+          <span class="pill">Round: <strong>${game.round}</strong></span>
+          <span class="pill">Wins/Losses: <strong>${game.stats.wins}/${game.stats.losses}</strong></span>
+          <span class="pill">Win Rate: <strong>${winRate(game.stats)}</strong></span>
+          <span class="pill">Rolls: <strong>${game.stats.rolls}</strong></span>
+          <span class="pill">Biggest Bet: <strong>$${game.stats.biggestBet}</strong></span>
+          <span class="pill">Biggest Win: <strong>$${game.stats.biggestWin}</strong></span>
+        `;
+
+        limitsEl.textContent = `Table limits: $${game.tableMin}–$${game.tableMax}. You can currently bet up to $${limits.max}.`;
+      }
+
+      function renderLastRoll() {
+        diceEl.innerHTML = '';
+
+        if (!game.lastRoll) {
+          lastRollEl.textContent = 'No roll yet this session.';
+          return;
+        }
+
+        game.lastRoll.dice.forEach((value) => {
+          diceEl.appendChild(makeDie(value));
+        });
+
+        const phaseText = game.lastRoll.phase === 'comeOut' ? 'Come-Out' : `Point ${game.point ?? game.lastRoll.total}`;
+        lastRollEl.textContent = `Last roll: [${game.lastRoll.dice.join(', ')}] → ${game.lastRoll.total} (${phaseText})`;
+      }
+
+      function renderHistory() {
+        historyEl.innerHTML = '';
+        if (game.history.length === 0) {
+          historyEl.innerHTML = '<li class="muted">No resolved rounds yet.</li>';
+          return;
+        }
+
+        game.history.forEach((entry) => {
+          const item = document.createElement('li');
+          const result = entry.outcome === 'win' ? 'WIN' : 'LOSS';
+          item.textContent = `Round ${entry.round} — ${result} (${entry.label}) on ${entry.total}. Bet $${entry.bet}. Bankroll $${entry.bankroll}.`;
+          historyEl.appendChild(item);
+        });
+      }
+
+      function renderControls() {
+        const canBet = game.status === 'inProgress' && game.activeBet === 0;
+        const canRoll = game.status === 'inProgress' && game.activeBet > 0;
+
+        betInputEl.disabled = !canBet;
+        placeBetBtn.disabled = !canBet;
+        rollBtn.disabled = !canRoll;
+
+        document.querySelectorAll('.quick-bet').forEach((btn) => {
+          btn.disabled = !canBet;
+        });
+      }
+
+      function render() {
+        renderSummary();
+        renderLastRoll();
+        renderHistory();
+        renderControls();
+
+        statusEl.textContent = game.message;
+        tablePanelEl.classList.toggle('session-over', game.status !== 'inProgress');
+      }
+
+      function handleBetPlacement() {
+        try {
+          placeBet(game, Number(betInputEl.value));
+          render();
+        } catch (error) {
+          statusEl.textContent = error.message;
+        }
+      }
+
+      document.querySelectorAll('.quick-bet').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const increment = Number(btn.dataset.bet);
+          const next = Number(betInputEl.value) + increment;
+          betInputEl.value = String(next);
+        });
+      });
+
+      placeBetBtn.addEventListener('click', handleBetPlacement);
+
+      betInputEl.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') handleBetPlacement();
+      });
+
+      rollBtn.addEventListener('click', () => {
+        try {
+          playRoll(game);
+          render();
+        } catch (error) {
+          statusEl.textContent = error.message;
+        }
+      });
+
+      newSessionBtn.addEventListener('click', () => {
+        game = createGame({ startingBankroll: 500, tableMin: 5, tableMax: 200 });
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
+
